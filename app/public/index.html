@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#160e1c">
+  <title>We Dare You to Steal Our API Keys. — Fly.io × AGNTCon</title>
+  <style>
+    :root { color-scheme:dark; --bg:#160e1c; --panel:#211629; --line:#49354f; --muted:#b7a8bd; --text:#f8f0fa; --violet:#c9a4ff; --lime:#d8ff87; --red:#ffb1b8; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; }
+    button,textarea { font:inherit; }
+    button { cursor:pointer; }
+    button:disabled { cursor:not-allowed; opacity:.5; }
+    a { color:inherit; }
+    button:focus-visible,a:focus-visible,textarea:focus-visible,summary:focus-visible { outline:3px solid var(--lime); outline-offset:5px; }
+    [hidden] { display:none !important; }
+    .shell { max-width:1180px; margin:auto; padding:0 48px; }
+    .skip { position:absolute; top:-80px; left:20px; z-index:40; padding:12px; background:var(--lime); color:var(--bg); }
+    .skip:focus { top:12px; }
+    .topbar { height:80px; display:flex; align-items:center; border-bottom:1px solid var(--line); }
+    .brand { display:flex; gap:13px; align-items:center; text-decoration:none; }
+    .brand-logo { display:block; width:120px; height:auto; }
+    .event { margin-left:7px; padding-left:20px; border-left:1px solid var(--line); color:var(--muted); font-size:12px; letter-spacing:1px; }
+    .hero { padding:40px 0 30px; }
+    h1 { margin:0; font-size:clamp(40px,5.2vw,65px); line-height:1.04; letter-spacing:-2.8px; font-weight:560; }
+    h1 em { font-style:normal; color:var(--violet); }
+    .intro { color:var(--muted); font-size:16px; line-height:1.6; margin:20px 0 0; }
+    .lab { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); border-radius:15px; background:var(--panel); overflow:hidden; min-height:380px; }
+    .composer,.response-pane { padding:26px; display:flex; flex-direction:column; min-width:0; }
+    .composer { border-right:1px solid var(--line); }
+    label,.response-heading h2 { font-size:14px; font-weight:600; margin:0; }
+    textarea { width:100%; flex:1; min-height:150px; max-height:270px; resize:vertical; margin:16px 0 20px; border:1px solid #58415f; border-radius:8px; background:#1a1120; color:var(--text); padding:15px; font-size:15px; line-height:1.6; }
+    textarea::placeholder { color:#9a88a3; }
+    textarea:focus { border-color:var(--violet); }
+    .primary,.secondary { border-radius:7px; padding:11px 18px; font-size:14px; font-weight:550; }
+    .primary { background:var(--lime); color:#1c2613; border:1px solid var(--lime); }
+    .primary:hover:not(:disabled) { background:#e6ffb3; }
+    .secondary { background:transparent; color:var(--text); border:1px solid #80628d; }
+    .secondary:hover:not(:disabled) { background:#392640; }
+    .submit-row { display:flex; align-items:center; gap:14px; }
+    .submit-row .primary { min-width:105px; }
+    .response-pane { background:radial-gradient(ellipse at 100% 0%,#38204166,transparent 75%); }
+    .response-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; }
+    .response-state { font-size:12px; color:var(--muted); }
+    .empty { color:#a491ad; font-size:15px; line-height:1.7; margin:0; }
+    .response-text { overflow-wrap:anywhere; font-size:15px; line-height:1.65; margin:0; height:285px; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+    .chat-message { padding:0 8px 18px 0; }
+    .chat-message + .chat-message { padding-top:16px; border-top:1px solid var(--line); }
+    .chat-role { margin:0 0 6px; color:var(--violet); font-size:12px; font-weight:650; }
+    .chat-message.user .chat-role { color:var(--lime); }
+    .chat-content { margin:0; white-space:pre-wrap; }
+    .chat-status { margin:6px 0 0; font-size:12px; color:var(--red); }
+    .notice { margin-top:15px; color:var(--red); font-size:13px; line-height:1.6; }
+    .retry { background:transparent; color:var(--text); padding:5px 0; border:0; text-decoration:underline; text-underline-offset:3px; }
+    .after-app { display:flex; align-items:flex-start; justify-content:space-between; gap:22px; padding:22px 0 32px; }
+    .rules { color:var(--muted); max-width:530px; font-size:13px; line-height:1.65; }
+    .rules summary { cursor:pointer; width:fit-content; padding:9px 0; }
+    .rules p { margin:10px 0 0; }
+    .next-step { display:flex; gap:18px; align-items:center; flex-shrink:0; }
+    .next-step p { color:var(--muted); font-size:14px; margin:0; }
+    .terminal-window { position:fixed; z-index:30; right:24px; bottom:24px; width:min(720px,calc(100vw - 32px)); height:min(480px,70vh); height:min(480px,70dvh); display:flex; flex-direction:column; border:1px solid #80628d; border-radius:14px; overflow:hidden; background:var(--panel); box-shadow:0 24px 100px #000b; }
+    .terminal-header { min-height:52px; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-shrink:0; cursor:grab; touch-action:none; user-select:none; }
+    .terminal-header h2 { margin:0; font-family:"SFMono-Regular",Consolas,monospace; font-size:14px; font-weight:500; }
+    .terminal-controls { display:flex; align-items:center; gap:9px; }
+    .terminal-controls button { font-size:12px; padding:9px 12px; }
+    .terminal-frame { display:block; width:100%; flex:1; min-height:0; border:0; border-top:1px solid var(--line); background:#120d17; }
+    .terminal-window.adjusting .terminal-frame { pointer-events:none; }
+    .terminal-window.adjusting .terminal-header { cursor:grabbing; }
+    .terminal-resize { position:absolute; right:0; bottom:0; width:26px; height:26px; padding:0; border:0; background:transparent; cursor:nwse-resize; touch-action:none; }
+    .terminal-resize::after { content:''; position:absolute; right:6px; bottom:6px; width:11px; height:11px; border-right:2px solid var(--violet); border-bottom:2px solid var(--violet); }
+    .terminal-resize:focus-visible { outline:2px solid var(--lime); outline-offset:-4px; }
+    .terminal-placeholder { display:grid; flex:1; place-items:center; color:var(--muted); font-size:14px; border-top:1px solid var(--line); }
+    .terminal-status { padding:12px 18px; font-size:13px; color:var(--red); border-top:1px solid var(--line); }
+    .terminal-dock { position:fixed; z-index:31; right:24px; bottom:24px; display:flex; align-items:center; gap:25px; padding:14px 18px; color:var(--text); background:var(--panel); border:1px solid #80628d; border-radius:9px; box-shadow:0 8px 40px #0008; font-size:13px; }
+    .terminal-dock span:last-child { color:var(--lime); }
+    @media(max-width:700px) {
+      .shell { padding:0 22px; } .topbar { height:70px; } .hero { padding:30px 0 26px; }
+      h1 { font-size:clamp(37px,8vw,52px); letter-spacing:-1.8px; } .intro { font-size:15px; margin-top:17px; }
+      .lab { grid-template-columns:1fr; } .composer { border-right:0; border-bottom:1px solid var(--line); }
+      .composer,.response-pane { padding:22px; } .response-pane { min-height:180px; } .response-text { max-height:280px; }
+      .after-app { flex-direction:column-reverse; gap:12px; } .next-step { width:100%; justify-content:space-between; gap:12px; }
+      .next-step p { font-size:13px; } .next-step button { padding:11px 13px; }
+      .terminal-window { bottom:16px; right:16px; }
+      .terminal-header { padding:8px 12px; gap:8px; } .terminal-controls { margin-left:auto; gap:6px; }
+      .terminal-controls button { padding:8px 10px; } .terminal-dock { bottom:12px; right:12px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#prompt">Skip to prompt</a>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Fly.io AGNTCon">
+        <img class="brand-logo" src="/fly-logo.png" alt="Fly.io" width="2000" height="593"><span class="event">AGNTCON</span>
+      </a>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="title">
+        <h1 id="title">We Dare You to<br>Steal Our <em>API Keys.</em></h1>
+        <p class="intro">Ask Claude something. Then try to find our API key.</p>
+      </section>
+      <section class="lab" aria-label="Ask Claude">
+        <form class="composer" id="prompt-form">
+          <label for="prompt">Your prompt</label>
+          <textarea id="prompt" name="prompt" maxlength="6000" placeholder="Ask anything…" required></textarea>
+          <div class="submit-row"><button type="submit" class="primary" id="send" disabled>Cmd + Enter to send</button><button type="button" class="secondary" id="stop" hidden>Stop</button></div>
+          <div class="notice" id="notice" hidden><span id="notice-text" role="status"></span> <button type="button" class="retry" id="retry" hidden>Try again</button></div>
+        </form>
+        <div class="response-pane">
+          <div class="response-heading"><h2>Conversation</h2><span class="response-state" id="response-state" role="status" aria-live="polite"></span></div>
+          <p class="empty" id="empty-state">Your response will appear here.</p>
+          <div id="response" class="response-text" role="region" aria-label="Conversation with Claude" tabindex="0" hidden></div>
+        </div>
+      </section>
+      <div class="after-app">
+        <details class="rules"><summary>Challenge rules</summary><p>Find the raw provider API key to win. You may inspect and change anything inside this disposable Sprite, including its files, processes, and environment.</p><p>Keep your investigation inside this Sprite. External providers, the Sprites control plane, and other environments are outside scope. Report actual evidence. Successfully calling the API does not count as recovering the key.</p></details>
+        <div class="next-step" id="next-step"><p>Try to steal the key.</p><button type="button" class="primary" id="open-terminal" aria-controls="terminal" aria-expanded="false">Open Claude Code ↗</button></div>
+      </div>
+      <section class="terminal-window" id="terminal" role="dialog" aria-modal="false" aria-labelledby="terminal-title" hidden>
+        <header class="terminal-header"><h2 id="terminal-title">&gt;_ Sprite terminal</h2><div class="terminal-controls"><button type="button" class="secondary" id="minimize-terminal" aria-label="Minimize terminal">Minimize −</button></div></header>
+        <div class="terminal-placeholder" id="terminal-placeholder">Opening terminal…</div>
+        <iframe class="terminal-frame" id="terminal-frame" title="Terminal inside this Sprite" hidden></iframe>
+        <div class="terminal-status" id="terminal-status" role="status" hidden><span id="terminal-error"></span> <button type="button" class="retry" id="reconnect-terminal">Reconnect</button></div>
+        <button type="button" class="terminal-resize" id="resize-terminal" aria-label="Resize terminal" title="Drag to resize; arrow keys also resize"></button>
+      </section>
+      <button type="button" class="terminal-dock" id="restore-terminal" aria-controls="terminal" hidden><span>&gt;_ Terminal</span><span>Restore ↗</span></button>
+    </main>
+  </div>
+  <script>
+    const $ = id => document.getElementById(id);
+    const promptInput = $('prompt');
+    const response = $('response');
+    // Page memory only: refreshing starts a new conversation.
+    const conversation = [];
+    function appendMessage(role, text) {
+      const message = document.createElement('article');
+      message.className = `chat-message ${role}`;
+      const label = document.createElement('p');
+      label.className = 'chat-role';
+      label.textContent = role === 'user' ? 'You' : 'Claude';
+      const content = document.createElement('p');
+      content.className = 'chat-content';
+      content.textContent = text;
+      const status = document.createElement('p');
+      status.className = 'chat-status';
+      status.hidden = true;
+      message.append(label, content, status);
+      response.append(message);
+      response.scrollTop = response.scrollHeight;
+      return {content, status};
+    }
+    let providerReady = false;
+    let activeRequest = null;
+    function notice(message = '') {
+      $('notice-text').textContent = message;
+      $('notice').hidden = !message;
+    }
+    function setBusy(busy) {
+      $('send').disabled = busy || !providerReady || !promptInput.value.trim();
+      $('send').hidden = busy;
+      $('stop').hidden = !busy;
+      promptInput.readOnly = busy;
+      response.setAttribute('aria-busy', String(busy));
+    }
+    async function checkConnection() {
+      $('retry').disabled = true;
+      try {
+        const result = await fetch('/api/status', {cache:'no-store',signal:AbortSignal.timeout(12000)});
+        if (!result.ok) throw new Error();
+        providerReady = (await result.json()).ready === true;
+        if (!providerReady) throw new Error();
+        notice();
+        $('retry').hidden = true;
+      } catch (_) {
+        providerReady = false;
+        notice('Claude is unavailable. Try again or ask the booth host.');
+        $('retry').hidden = false;
+        $('next-step').hidden = false;
+      } finally {
+        $('retry').disabled = false;
+        setBusy(Boolean(activeRequest));
+      }
+    }
+    // Incremental SSE parsing: handles split UTF-8 characters, split lines,
+    // CRLF across network chunks, and multiple events within one chunk.
+    async function readEvents(body, onEvent) {
+      const reader = body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '', eventType = 'message', data = [];
+      const dispatch = () => {
+        if (data.length) onEvent(eventType, data.join('\n'));
+        eventType = 'message';
+        data = [];
+      };
+      const line = (value) => {
+        if (value === '') { dispatch(); return; }
+        if (value.startsWith(':')) return;
+        const colon = value.indexOf(':');
+        const field = colon === -1 ? value : value.slice(0, colon);
+        let content = colon === -1 ? '' : value.slice(colon + 1);
+        if (content.startsWith(' ')) content = content.slice(1);
+        if (field === 'event') eventType = content;
+        if (field === 'data') data.push(content);
+      };
+      const flush = (final = false) => {
+        let index;
+        while ((index = buffer.search(/[\r\n]/)) !== -1) {
+          if (!final && buffer[index] === '\r' && index === buffer.length - 1) break;
+          const length = buffer[index] === '\r' && buffer[index + 1] === '\n' ? 2 : 1;
+          line(buffer.slice(0, index));
+          buffer = buffer.slice(index + length);
+        }
+        if (final) {
+          if (buffer) line(buffer);
+          dispatch();
+        }
+      };
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          flush();
+        }
+        buffer += decoder.decode();
+        flush(true);
+      } finally { reader.releaseLock(); }
+    }
+
+
+    async function submitPrompt(event) {
+      event.preventDefault();
+      const prompt = promptInput.value.trim();
+      if (!providerReady || !prompt || activeRequest) return;
+      const controller = new AbortController();
+      activeRequest = controller;
+      let completed = false;
+      let output = '';
+      response.hidden = false;
+      $('empty-state').hidden = true;
+      conversation.push({role:'user', content:prompt});
+      appendMessage('user', prompt);
+      const reply = appendMessage('assistant', 'Thinking…');
+      promptInput.value = '';
+      $('response-state').textContent = 'Thinking…';
+      notice();
+      setBusy(true);
+      try {
+        const result = await fetch('/api/chat', {
+          method:'POST', headers:{'Content-Type':'application/json','Accept':'text/event-stream'},
+          body:JSON.stringify({messages:conversation}), signal:controller.signal
+        });
+        if (!result.ok) {
+          let message = `Request failed (${result.status}). Try again.`;
+          try { const data = await result.json(); if (typeof data.error === 'string') message = data.error; } catch (_) {}
+          throw new Error(message);
+        }
+        if (!result.body) throw new Error('Unable to read the response. Try again.');
+        await readEvents(result.body, (type, raw) => {
+          const data = JSON.parse(raw);
+          if (type === 'delta' && typeof data.text === 'string') {
+            const following = response.scrollHeight - response.scrollTop - response.clientHeight < 60;
+            output += data.text;
+            reply.content.textContent = output;
+            if (following) response.scrollTop = response.scrollHeight;
+            $('response-state').textContent = '';
+          }
+          if (type === 'error') throw new Error(data.message || 'Request failed. Try again.');
+          if (type === 'done') completed = true;
+        });
+        if (!completed || !output) throw new Error('The response was interrupted. Try again.');
+        $('next-step').hidden = false;
+        $('response-state').textContent = '';
+      } catch (error) {
+        controller.abort();
+        $('response-state').textContent = output ? 'Partial response' : '';
+        const message = error.name === 'AbortError' ? 'Response stopped.' : error.message || 'Request failed. Try again.';
+        if (!output) reply.content.textContent = '';
+        reply.status.textContent = message;
+        reply.status.hidden = false;
+        notice(message);
+        $('next-step').hidden = false;
+      } finally {
+        if (output) conversation.push({role:'assistant', content:output});
+        activeRequest = null;
+        setBusy(false);
+      }
+    }
+    $('prompt-form').addEventListener('submit', submitPrompt);
+    promptInput.addEventListener('input', () => setBusy(Boolean(activeRequest)));
+    promptInput.addEventListener('keydown', event => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') { event.preventDefault(); $('prompt-form').requestSubmit(); }
+    });
+    $('stop').addEventListener('click', () => activeRequest?.abort());
+    $('retry').addEventListener('click', checkConnection);
+
+    let terminalRequest = null;
+    let terminalFocusTimer;
+    const terminal = $('terminal');
+    const terminalHeader = terminal.querySelector('.terminal-header');
+    function placeTerminal(left, top, width, height) {
+      const margin = 8;
+      width = Math.min(Math.max(320, width), innerWidth - margin * 2);
+      height = Math.min(Math.max(220, height), innerHeight - margin * 2);
+      left = Math.max(margin, Math.min(left, innerWidth - width - margin));
+      top = Math.max(margin, Math.min(top, innerHeight - height - margin));
+      Object.assign(terminal.style, {left:`${left}px`, top:`${top}px`, width:`${width}px`, height:`${height}px`, right:'auto', bottom:'auto'});
+    }
+    function fitTerminal() {
+      if (terminal.hidden) return;
+      const r = terminal.getBoundingClientRect();
+      placeTerminal(r.left, r.top, r.width, r.height);
+    }
+    function windowGesture(handle, resize) {
+      handle.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || (!resize && event.target.closest('button'))) return;
+        event.preventDefault();
+        const r = terminal.getBoundingClientRect();
+        const x = event.clientX, y = event.clientY, pointer = event.pointerId;
+        handle.setPointerCapture(pointer);
+        terminal.classList.add('adjusting');
+        const move = e => {
+          if (e.pointerId !== pointer) return;
+          const dx = e.clientX - x, dy = e.clientY - y;
+          placeTerminal(resize ? r.left : r.left + dx, resize ? r.top : r.top + dy,
+            resize ? Math.min(r.width + dx, innerWidth - r.left - 8) : r.width,
+            resize ? Math.min(r.height + dy, innerHeight - r.top - 8) : r.height);
+        };
+        const end = e => {
+          if (e.pointerId !== pointer) return;
+          handle.removeEventListener('pointermove', move);
+          handle.removeEventListener('pointerup', end);
+          handle.removeEventListener('pointercancel', end);
+          handle.removeEventListener('lostpointercapture', end);
+          terminal.classList.remove('adjusting');
+          if (handle.hasPointerCapture(pointer)) handle.releasePointerCapture(pointer);
+        };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('pointerup', end);
+        handle.addEventListener('pointercancel', end);
+        handle.addEventListener('lostpointercapture', end);
+      });
+    }
+    windowGesture(terminalHeader, false);
+    windowGesture($('resize-terminal'), true);
+    $('resize-terminal').addEventListener('keydown', event => {
+      const delta = {ArrowLeft:[-20,0], ArrowRight:[20,0], ArrowUp:[0,-20], ArrowDown:[0,20]}[event.key];
+      if (!delta) return;
+      event.preventDefault();
+      const r = terminal.getBoundingClientRect();
+      placeTerminal(r.left, r.top, r.width + delta[0], r.height + delta[1]);
+    });
+    window.addEventListener('resize', fitTerminal);
+    function terminalError(message = '') {
+      $('terminal-error').textContent = message;
+      $('terminal-status').hidden = !message;
+    }
+    function focusTerminal(attempt = 0) {
+      clearTimeout(terminalFocusTimer);
+      if ($('terminal').hidden || $('terminal').inert) return;
+      try {
+        const frame = $('terminal-frame');
+        const input = frame.contentDocument?.querySelector('textarea[aria-label="Terminal input"], .xterm-helper-textarea');
+        if (input) { frame.contentWindow.focus(); input.focus({preventScroll:true}); return; }
+      } catch (_) {}
+      if (attempt < 30) terminalFocusTimer = setTimeout(() => focusTerminal(attempt + 1), 50);
+    }
+    function showTerminal() {
+      $('terminal').hidden = false;
+      $('terminal').inert = false;
+      fitTerminal();
+      $('restore-terminal').hidden = true;
+      $('open-terminal').setAttribute('aria-expanded','true');
+      if ($('terminal-frame').hasAttribute('src')) requestAnimationFrame(() => focusTerminal());
+      else $('minimize-terminal').focus({preventScroll:true});
+    }
+    function minimizeTerminal() {
+      clearTimeout(terminalFocusTimer);
+      $('terminal').hidden = true;
+      $('terminal').inert = true;
+      $('restore-terminal').hidden = false;
+      $('open-terminal').setAttribute('aria-expanded','false');
+      $('open-terminal').focus({preventScroll:true});
+    }
+    async function connectTerminal() {
+      if (terminalRequest) return;
+      terminalRequest = new AbortController();
+      $('reconnect-terminal').disabled = true;
+      terminalError();
+      const url = '/terminal/?arg=claude';
+      try {
+        const result = await fetch(url, {cache:'no-store',signal:AbortSignal.any([terminalRequest.signal,AbortSignal.timeout(12000)])});
+        if (!result.ok || !result.headers.get('content-type')?.includes('text/html')) throw new Error();
+        // Open Claude at an empty input. Restore keeps this session.
+        $('terminal-frame').src = url;
+        $('terminal-frame').hidden = false;
+        $('terminal-placeholder').hidden = true;
+      } catch (_) {
+        terminalError('The terminal could not connect.');
+      } finally {
+        terminalRequest = null;
+        $('reconnect-terminal').disabled = false;
+      }
+    }
+    function openTerminal() {
+      showTerminal();
+      if (!$('terminal-frame').hasAttribute('src')) connectTerminal();
+    }
+    $('open-terminal').addEventListener('click', openTerminal);
+    $('restore-terminal').addEventListener('click', openTerminal);
+    $('minimize-terminal').addEventListener('click', minimizeTerminal);
+    $('reconnect-terminal').addEventListener('click', () => connectTerminal());
+    $('terminal-frame').addEventListener('load', () => {
+      if (!$('terminal-frame').hasAttribute('src')) return;
+      if (!$('terminal').hidden) requestAnimationFrame(() => focusTerminal());
+    });
+    $('terminal-frame').addEventListener('error', () => terminalError('The terminal could not load.'));
+    checkConnection();
+  </script>
+</body>
+</html>

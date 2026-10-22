@@ -1,0 +1,14 @@
+{
+  "name": "agntcon-key-challenge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node app/server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "bash scripts/check.sh",
+    "doctor": "node scripts/doctor.mjs",
+    "audit:publication": "python3 scripts/audit-publication.py"
+  },
+  "engines": { "node": ">=22" }
+}

@@ -1,0 +1,23 @@
+# Local routing overrides and all runtime/operator state stay off GitHub.
+/app/config.json
+/.runtime/
+/.operator/
+.env
+.env.*
+!.env.example
+.sprite
+.sprites/
+.claude/
+.claude.json
+.codex/
+node_modules/
+__pycache__/
+*.pyc
+*.log
+*.jsonl
+*.tar
+*.tar.gz
+*.zip
+*.pem
+*.key
+.DS_Store
